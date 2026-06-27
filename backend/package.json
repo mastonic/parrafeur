@@ -2,8 +2,12 @@
   "name": "parapheur-backend",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "STANDALONE=1 node --watch server.js",
-    "start": "STANDALONE=1 node server.js"
+    "dev": "STANDALONE=1 node --watch ../backend/server.js",
+    "start": "STANDALONE=1 node ../backend/server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3"
   }
 }

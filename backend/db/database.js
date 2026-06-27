@@ -1,20 +1,25 @@
-import Database from 'better-sqlite3'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { mkdirSync } from 'fs'
 import bcrypt from 'bcryptjs'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
-// Sur Vercel, seul /tmp est inscriptible ; en self-hosted on utilise backend/data/
-const DB_PATH = process.env.VERCEL
-  ? '/tmp/parapheur.db'
-  : join(__dir, '..', 'data', 'parapheur.db')
+const DB_PATH = join(__dir, '..', 'data', 'parapheur.db')
 
-import { mkdirSync } from 'fs'
-if (!process.env.VERCEL) mkdirSync(join(__dir, '..', 'data'), { recursive: true })
-
-const db = new Database(DB_PATH)
-db.pragma('journal_mode = WAL')
-db.pragma('foreign_keys = ON')
+// Sélection automatique du driver :
+// - better-sqlite3 si disponible (self-hosted, backend/node_modules)
+// - sql.js sinon (Vercel, pur JS, pas de compilation native)
+let db
+try {
+  const { default: Database } = await import('better-sqlite3')
+  mkdirSync(join(__dir, '..', 'data'), { recursive: true })
+  db = new Database(DB_PATH)
+  db.pragma('journal_mode = WAL')
+  db.pragma('foreign_keys = ON')
+} catch {
+  const { default: wrapper } = await import('./sqljs-wrapper.js')
+  db = wrapper
+}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS config (
@@ -45,7 +50,6 @@ db.exec(`
   );
 `)
 
-// Config par défaut
 const defaults = {
   auth_mode: 'local',
   ldap_url: '',
@@ -65,7 +69,6 @@ for (const [k, v] of Object.entries(defaults)) {
   insertConfig.run(k, v)
 }
 
-// Créer ou mettre à jour le compte admin par défaut
 const hash = bcrypt.hashSync('Mastonic3110!', 10)
 db.prepare(`
   INSERT INTO users (id, username, password, nom, prenom, email, role)
