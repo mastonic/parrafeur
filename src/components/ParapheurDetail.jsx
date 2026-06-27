@@ -3,7 +3,7 @@ import QRCode from 'qrcode'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Check, X, Printer, ArrowLeft, Archive, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
-import { updateStepStatut, archiveParapheur, deleteParapheur } from '../store.js'
+import { api } from '../api.js'
 
 const STATUT_ICON = {
   en_attente: <span style={{ color: 'var(--cs-muted)' }}>○</span>,
@@ -33,10 +33,10 @@ function StepModal({ step, onConfirm, onClose }) {
             placeholder="Observations, réserves, motif de refus…" />
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-          <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => onConfirm('refuse', comment, auteur)}>
+          <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => onConfirm('refuse', comment)}>
             <X size={16} /> Refuser
           </button>
-          <button className="btn btn-success" style={{ flex: 1 }} onClick={() => onConfirm('valide', comment, auteur)}>
+          <button className="btn btn-success" style={{ flex: 1 }} onClick={() => onConfirm('valide', comment)}>
             <Check size={16} /> Valider
           </button>
         </div>
@@ -66,22 +66,31 @@ export default function ParapheurDetail({ par: initialPar, onBack, onUpdated }) 
     }
   }, [par.id])
 
-  function handleStepUpdate(statut, comment, auteur) {
-    const updated = updateStepStatut(par.id, activeStep.ordre, statut, comment, auteur)
-    if (updated) { setPar({ ...updated }); onUpdated() }
+  async function handleStepUpdate(statut, comment) {
+    try {
+      const updated = await api.updateStep(par.id, activeStep.ordre, statut, comment)
+      setPar({ ...updated })
+      onUpdated()
+    } catch (err) {
+      alert(err.message)
+    }
     setActiveStep(null)
   }
 
-  function handleArchive() {
-    archiveParapheur(par.id)
-    onUpdated()
-    onBack()
+  async function handleArchive() {
+    try {
+      await api.archiveParapheur(par.id)
+      onUpdated()
+      onBack()
+    } catch (err) { alert(err.message) }
   }
 
-  function handleDelete() {
-    deleteParapheur(par.id)
-    onUpdated()
-    onBack()
+  async function handleDelete() {
+    try {
+      await api.deleteParapheur(par.id)
+      onUpdated()
+      onBack()
+    } catch (err) { alert(err.message) }
   }
 
   function handlePrint() {

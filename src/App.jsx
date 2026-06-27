@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { LayoutDashboard, QrCode, Bell, FlaskConical } from 'lucide-react'
+import { LayoutDashboard, QrCode, Bell, LogOut, Shield } from 'lucide-react'
 import Dashboard from './components/Dashboard.jsx'
 import NewParapheur from './components/NewParapheur.jsx'
 import ParapheurDetail from './components/ParapheurDetail.jsx'
 import Scanner from './components/Scanner.jsx'
 import AlertsView from './components/AlertsView.jsx'
-import { loadParapheurs, getAlerts } from './store.js'
-import { injectSeedData, hasSeedData } from './seedData.js'
+import LoginScreen from './components/LoginScreen.jsx'
+import AdminPanel from './components/admin/AdminPanel.jsx'
+import { useAuth } from './contexts/AuthContext.jsx'
+import { api } from './api.js'
+import { getAlerts } from './store.js'
 
 const NAV = [
   { key: 'dashboard', label: 'Tableau de bord', Icon: LayoutDashboard },
@@ -15,66 +18,46 @@ const NAV = [
 ]
 
 export default function App() {
+  const { user, loading, logout } = useAuth()
   const [tab, setTab] = useState('dashboard')
   const [parapheurs, setParapheurs] = useState([])
   const [selected, setSelected] = useState(null)
   const [creating, setCreating] = useState(false)
-  const [showSeedBanner, setShowSeedBanner] = useState(false)
-  const [seedLoaded, setSeedLoaded] = useState(false)
+  const [showAdmin, setShowAdmin] = useState(false)
 
   useEffect(() => {
-    const list = loadParapheurs()
-    setParapheurs(list)
-    setSeedLoaded(hasSeedData())
+    if (!user) return
+    refresh()
 
-    // Détection QR scan via URL : ?id={parapheurId}
     const params = new URLSearchParams(window.location.search)
     const idFromUrl = params.get('id')
     if (idFromUrl) {
-      const found = list.find(p => p.id === idFromUrl)
-      if (found) {
-        setSelected(found)
-        // Nettoyer l'URL sans recharger
+      api.getParapheur(idFromUrl).then(p => {
+        setSelected(p)
         window.history.replaceState({}, '', window.location.pathname)
-      } else {
-        setTab('scanner')
-      }
+      }).catch(() => setTab('scanner'))
     }
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
-    const interval = setInterval(checkAndNotify, 60_000)
-    return () => clearInterval(interval)
-  }, [])
+  }, [user])
 
-  function refresh() {
-    const list = loadParapheurs()
-    setParapheurs(list)
-    setSeedLoaded(hasSeedData())
+  async function refresh() {
+    try {
+      const list = await api.getParapheurs()
+      setParapheurs(list)
+    } catch { /* token expired → AuthContext reloads */ }
   }
 
-  function checkAndNotify() {
-    const list = loadParapheurs()
-    const alerts = getAlerts(list)
-    if (alerts.length > 0 && Notification.permission === 'granted') {
-      const urgent = alerts.filter(a => a.type === 'danger')
-      if (urgent.length > 0) {
-        new Notification('CAP SUD — Parapheurs en retard', {
-          body: `${urgent.length} dossier(s) en retard : ${urgent.map(a => a.par.reference).join(', ')}`,
-          icon: '/logo192.png',
-          tag: 'parapheur-urgent'
-        })
-      }
-    }
+  if (loading) {
+    return <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cs-bg)', fontSize: 14, color: 'var(--cs-muted)' }}>Chargement...</div>
   }
 
-  function handleLoadDemo() {
-    injectSeedData()
-    refresh()
-    setSeedLoaded(true)
-    setShowSeedBanner(true)
-    setTimeout(() => setShowSeedBanner(false), 4000)
+  if (!user) return <LoginScreen />
+
+  if (showAdmin) {
+    return <AdminPanel onBack={() => { setShowAdmin(false); refresh() }} />
   }
 
   const alerts = getAlerts(parapheurs)
@@ -89,15 +72,19 @@ export default function App() {
           <div style={{ fontSize: 10, opacity: .7, lineHeight: 1.2 }}>Parapheur Numérique</div>
         </div>
       </div>
-      <div className="topbar-actions">
-        {alertCount > 0 && (
-          <div style={{ position: 'relative' }}>
-            <Bell size={22} color="#fff" />
-            <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--cs-rouge)', color: '#fff', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>
-              {alertCount > 9 ? '9+' : alertCount}
-            </span>
-          </div>
+      <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', lineHeight: 1.2, textAlign: 'right' }}>
+          <div style={{ fontWeight: 700 }}>{user.prenom} {user.nom}</div>
+          <div style={{ opacity: 0.7, textTransform: 'uppercase', fontSize: 10 }}>{user.role}</div>
+        </div>
+        {user.role === 'admin' && (
+          <button onClick={() => setShowAdmin(true)} title="Administration" style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 7, padding: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <Shield size={18} color="#fff" />
+          </button>
         )}
+        <button onClick={logout} title="Déconnexion" style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 7, padding: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <LogOut size={18} color="#fff" />
+        </button>
       </div>
     </div>
   )
@@ -131,42 +118,18 @@ export default function App() {
     )
   }
 
+  const canCreate = ['admin', 'instructeur'].includes(user.role)
+
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {topbar}
-
-      {showSeedBanner && (
-        <div style={{ background: 'var(--cs-vert)', color: '#fff', padding: '10px 16px', fontSize: 13, fontWeight: 600, textAlign: 'center' }}>
-          ✓ 5 parapheurs de démonstration chargés avec succès !
-        </div>
-      )}
-
       <div className="content">
         {tab === 'dashboard' && (
-          <>
-            {!seedLoaded && (
-              <div className="alert-item info" style={{ marginBottom: 12, cursor: 'pointer' }} onClick={handleLoadDemo}>
-                <div className="alert-icon"><FlaskConical size={18} color="var(--cs-bleu)" /></div>
-                <div className="alert-body">
-                  <div className="alert-title">Charger la démo CAP SUD</div>
-                  <div className="alert-desc">5 parapheurs fictifs réalistes pour tester toutes les fonctionnalités → cliquez ici</div>
-                </div>
-                <div style={{ alignSelf: 'center', fontSize: 18 }}>→</div>
-              </div>
-            )}
-            {seedLoaded && (
-              <div style={{ textAlign: 'right', marginBottom: 8 }}>
-                <span style={{ fontSize: 11, color: 'var(--cs-muted)', cursor: 'pointer', textDecoration: 'underline' }} onClick={handleLoadDemo}>
-                  Recharger les données démo
-                </span>
-              </div>
-            )}
-            <Dashboard
-              parapheurs={parapheurs}
-              onSelect={setSelected}
-              onNew={() => setCreating(true)}
-            />
-          </>
+          <Dashboard
+            parapheurs={parapheurs}
+            onSelect={setSelected}
+            onNew={canCreate ? () => setCreating(true) : null}
+          />
         )}
         {tab === 'scanner' && (
           <Scanner onFound={(par) => { setSelected(par) }} />

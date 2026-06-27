@@ -1,0 +1,52 @@
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+
+function getToken() {
+  return localStorage.getItem('par_token')
+}
+
+async function request(path, options = {}) {
+  const token = getToken()
+  const res = await fetch(`${BASE}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  })
+
+  if (res.status === 401) {
+    localStorage.removeItem('par_token')
+    window.location.reload()
+    return
+  }
+
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export const api = {
+  // Auth
+  login: (username, password) => request('/auth/login', { method: 'POST', body: { username, password } }),
+  me: () => request('/auth/me'),
+
+  // Parapheurs
+  getParapheurs: () => request('/parapheurs'),
+  createParapheur: (data) => request('/parapheurs', { method: 'POST', body: data }),
+  getParapheur: (id) => request(`/parapheurs/${id}`),
+  updateStep: (id, stepOrdre, statut, commentaire) => request(`/parapheurs/${id}/step`, { method: 'PUT', body: { stepOrdre, statut, commentaire } }),
+  archiveParapheur: (id) => request(`/parapheurs/${id}/archive`, { method: 'PUT' }),
+  deleteParapheur: (id) => request(`/parapheurs/${id}`, { method: 'DELETE' }),
+
+  // Utilisateurs (admin)
+  getUsers: () => request('/users'),
+  createUser: (data) => request('/users', { method: 'POST', body: data }),
+  updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: data }),
+  deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+
+  // Configuration (admin)
+  getConfig: () => request('/config'),
+  updateConfig: (data) => request('/config', { method: 'PUT', body: data }),
+  testLdap: (data) => request('/config/test-ldap', { method: 'POST', body: data }),
+}
