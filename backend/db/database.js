@@ -2,6 +2,7 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { mkdirSync } from 'fs'
 import bcrypt from 'bcryptjs'
+import { initDemoData } from './init-demo-data.js'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
 const DB_PATH = join(__dir, '..', 'data', 'parapheur.db')
@@ -75,5 +76,8 @@ db.prepare(`
   VALUES ('admin-default', 'admin', ?, 'Administrateur', 'Super', 'Demo1@holdmasto.fr', 'admin')
   ON CONFLICT(id) DO UPDATE SET password=excluded.password, email=excluded.email
 `).run(hash)
+
+// Initialize demo data if needed
+initDemoData(db)
 
 export default db
