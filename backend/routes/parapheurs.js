@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
+import crypto from 'crypto'
+import QRCode from 'qrcode'
 import db from '../db/database.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
 
@@ -101,6 +103,36 @@ router.delete('/:id', requireRole('admin'), (req, res) => {
   const result = db.prepare('DELETE FROM parapheurs WHERE id = ?').run(req.params.id)
   if (result.changes === 0) return res.status(404).json({ error: 'Introuvable' })
   res.json({ ok: true })
+})
+
+// Générer QR code pour un parapheur
+router.get('/:id/qr', (req, res) => {
+  const row = db.prepare('SELECT data FROM parapheurs WHERE id = ?').get(req.params.id)
+  if (!row) return res.status(404).json({ error: 'Parapheur introuvable' })
+
+  const par = JSON.parse(row.data)
+  const nameHash = crypto.createHash('sha256').update(par.objet).digest('hex').slice(0, 8)
+  const scanUrl = `${process.env.FRONTEND_URL || 'https://parrafeur.vercel.app'}/scan?id=${req.params.id}&name=${nameHash}`
+
+  QRCode.toDataURL(scanUrl, { errorCorrectionLevel: 'H', width: 300 }, (err, url) => {
+    if (err) return res.status(500).json({ error: 'Erreur génération QR' })
+    res.json({ qr: url, objet: par.objet, hash: nameHash })
+  })
+})
+
+// Valider le QR code au scan
+router.get('/:id/qr/validate/:nameHash', (req, res) => {
+  const row = db.prepare('SELECT data FROM parapheurs WHERE id = ?').get(req.params.id)
+  if (!row) return res.status(404).json({ error: 'Parapheur introuvable' })
+
+  const par = JSON.parse(row.data)
+  const expectedHash = crypto.createHash('sha256').update(par.objet).digest('hex').slice(0, 8)
+
+  if (expectedHash !== req.params.nameHash) {
+    return res.status(400).json({ error: 'QR code invalide ou endommagé' })
+  }
+
+  res.json({ valid: true, objet: par.objet, id: req.params.id })
 })
 
 export default router

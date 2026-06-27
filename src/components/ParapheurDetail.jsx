@@ -50,20 +50,23 @@ export default function ParapheurDetail({ par: initialPar, onBack, onUpdated }) 
   const [par, setPar] = useState(initialPar)
   const [activeStep, setActiveStep] = useState(null)
   const [showDelete, setShowDelete] = useState(false)
+  const [qrImage, setQrImage] = useState(null)
   const canvasRef = useRef(null)
 
-  // QR encode une URL réelle : scan → ouvre le navigateur → charge ce parapheur
-  const appUrl = window.location.origin + window.location.pathname
-  const qrData = `${appUrl}?id=${par.id}`
-
+  // Générer QR code via l'API (avec validation du nom)
   useEffect(() => {
-    if (canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, qrData, {
-        width: 200,
-        margin: 2,
-        color: { dark: '#1A5276', light: '#ffffff' }
-      })
+    async function generateQR() {
+      try {
+        const response = await fetch(`/api/parapheurs/${par.id}/qr`)
+        const data = await response.json()
+        if (data.qr) {
+          setQrImage(data.qr)
+        }
+      } catch (err) {
+        console.error('Erreur génération QR:', err)
+      }
     }
+    generateQR()
   }, [par.id])
 
   async function handleStepUpdate(statut, comment) {
@@ -179,10 +182,17 @@ export default function ParapheurDetail({ par: initialPar, onBack, onUpdated }) 
           <div style={{ textAlign: 'center', marginBottom: 4 }}>
             <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginBottom: 2 }}>CAP SUD — Parapheur numérique</div>
           </div>
-          <canvas ref={canvasRef} />
+          {qrImage ? (
+            <img src={qrImage} alt="QR Code" style={{ maxWidth: '100%', height: 'auto' }} />
+          ) : (
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--cs-muted)' }}>Génération QR...</div>
+          )}
           <div className="qr-ref">{par.reference}</div>
           <div style={{ fontSize: 11, color: 'var(--cs-muted)', textAlign: 'center' }}>
             Scanner pour accéder directement à ce dossier
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--cs-vert)', textAlign: 'center', marginTop: 8 }}>
+            ✅ Nom du dossier validé dans le QR code
           </div>
         </div>
         <button className="btn btn-primary btn-full" style={{ marginTop: 12 }} onClick={handlePrint}>

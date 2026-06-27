@@ -7,6 +7,7 @@ import Scanner from './components/Scanner.jsx'
 import AlertsView from './components/AlertsView.jsx'
 import LoginScreen from './components/LoginScreen.jsx'
 import AdminPanel from './components/admin/AdminPanel.jsx'
+import ScanConfirm from './components/ScanConfirm.jsx'
 import { useAuth } from './contexts/AuthContext.jsx'
 import { api } from './api.js'
 import { getAlerts } from './store.js'
@@ -70,6 +71,12 @@ export default function App() {
   }
 
   if (!user) return <LoginScreen />
+
+  // Page de confirmation QR scan
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('id') && params.get('name') && window.location.pathname === '/scan') {
+    return <ScanConfirm />
+  }
 
   if (showAdmin && user.role === 'admin') {
     const handleBack = () => {
