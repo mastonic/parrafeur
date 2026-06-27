@@ -1,7 +1,26 @@
 // Wrapper sql.js → API identique à better-sqlite3 (synchrone après init)
+// Charge le WASM depuis le disque pour fonctionner en serverless (Vercel)
 import initSqlJs from 'sql.js'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join, resolve } from 'path'
 
-const SQL = await initSqlJs()
+const __dir = dirname(fileURLToPath(import.meta.url))
+
+// Cherche le WASM dans node_modules depuis la racine du projet
+function findWasm() {
+  const candidates = [
+    join(__dir, '../../node_modules/sql.js/dist/sql-wasm.wasm'),
+    join(__dir, '../../../node_modules/sql.js/dist/sql-wasm.wasm'),
+    resolve('node_modules/sql.js/dist/sql-wasm.wasm'),
+  ]
+  for (const p of candidates) {
+    try { return readFileSync(p) } catch { /* try next */ }
+  }
+  throw new Error('sql-wasm.wasm introuvable')
+}
+
+const SQL = await initSqlJs({ wasmBinary: findWasm() })
 const _db = new SQL.Database()
 
 function flatParams(args) {
