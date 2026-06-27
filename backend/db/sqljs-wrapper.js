@@ -1,26 +1,14 @@
 // Wrapper sql.js → API identique à better-sqlite3 (synchrone après init)
-// Charge le WASM depuis le disque pour fonctionner en serverless (Vercel)
+// Utilise import.meta.url pour que Vercel NFT trace la dépendance WASM
 import initSqlJs from 'sql.js'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
-import { dirname, join, resolve } from 'path'
 
-const __dir = dirname(fileURLToPath(import.meta.url))
+// import.meta.url permet à Vercel de détecter et inclure le fichier WASM dans le bundle
+const wasmUrl = new URL('../../node_modules/sql.js/dist/sql-wasm.wasm', import.meta.url)
+const wasmBinary = readFileSync(fileURLToPath(wasmUrl))
 
-// Cherche le WASM dans node_modules depuis la racine du projet
-function findWasm() {
-  const candidates = [
-    join(__dir, '../../node_modules/sql.js/dist/sql-wasm.wasm'),
-    join(__dir, '../../../node_modules/sql.js/dist/sql-wasm.wasm'),
-    resolve('node_modules/sql.js/dist/sql-wasm.wasm'),
-  ]
-  for (const p of candidates) {
-    try { return readFileSync(p) } catch { /* try next */ }
-  }
-  throw new Error('sql-wasm.wasm introuvable')
-}
-
-const SQL = await initSqlJs({ wasmBinary: findWasm() })
+const SQL = await initSqlJs({ wasmBinary })
 const _db = new SQL.Database()
 
 function flatParams(args) {
@@ -70,11 +58,9 @@ function transaction(fn) {
   }
 }
 
-const db = {
+export default {
   pragma() {},
   exec(sql) { _db.run(sql) },
   prepare,
   transaction,
 }
-
-export default db
