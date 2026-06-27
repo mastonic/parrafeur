@@ -1,8 +1,15 @@
-# 🎭 **Kit Complet de Démonstration - Parapheur Numérique CAP SUD**
+# 🎭 **Kit Complet de Démonstration - Parapheur Hybride (Papier + QR Code) CAP SUD**
 
 ## 🎯 **C'est quoi?**
 
-Un kit complet pour présenter le Parapheur Numérique au **Président et Directeur de CAP SUD Martinique**.
+Un kit complet pour présenter le **Parapheur Hybride** au **Président et Directeur de CAP SUD Martinique**.
+
+### ✨ **L'Innovation: Pas de Révolution, juste une Amélioration**
+- ✅ On **garde le papier** (rien ne change pour les employés)
+- ✅ On **ajoute un QR code** sur chaque dossier
+- ✅ Scan le code → vois l'historique numérique
+- ✅ Signature papier → enregistrée automatiquement
+- ✅ Résultat: **Meilleur des 2 mondes**
 
 Inclut:
 - ✅ 6 utilisateurs de test avec profils réalistes

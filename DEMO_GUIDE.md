@@ -1,7 +1,14 @@
-# 📊 Guide de Démonstration - Parapheur Numérique CAP SUD
+# 📊 Guide de Démonstration - Parapheur Hybride (Papier + QR Code) CAP SUD
 
 ## 🎯 Objectif
-Montrer comment le **Parapheur Numérique** transforme les processus administratifs de CAP SUD en **gain de temps, traçabilité et sécurité**.
+Montrer comment le **Parapheur Hybride** (papier + QR code) transforme les processus administratifs de CAP SUD en **gain de temps, traçabilité et sécurité**.
+
+### ✨ **La Magie: On N'abandonne Rien**
+- ✅ Les dossiers papier restent (rien ne change)
+- ✅ On ajoute un QR code sur chaque dossier
+- ✅ Scan le code → historique numérique en temps réel
+- ✅ Signature papier → enregistrée automatiquement
+- ✅ **Meilleur des deux mondes, zéro résistance**
 
 ---
 
@@ -177,18 +184,29 @@ Montrer comment le **Parapheur Numérique** transforme les processus administrat
 
 ## 🎯 **Pitch pour le Président**
 
-> **"Monsieur le Président, imaginez:"**
+> **"Monsieur le Président, voici l'idée:"**
 >
-> "Vous arrivez le matin. 5 dossiers vous attendent.
-> En 30 minutes, vous avez signé les 5 avec vos commentaires.
-> Le système envoie automatiquement aux personnes suivantes.
+> "On ne vous demande pas d'abandonner le papier.
+> On ajoute juste une brique numérique intelligente.
 > 
-> Plus d'attente, plus de stress.
-> **Plus de tracabilité, plus de responsabilité.**
->
-> Et le meilleur? Ça marche aussi pour vos trésoriers, directeurs, maires.
+> Regardez ce dossier. C'est du papier classique.
+> Mais regardez le QR code en haut.
 > 
-> **Tout le monde gagne du temps. Tout le monde voit clair.**"
+> Vous scannez avec votre téléphone.
+> Vous voyez qui a signé, quand, les commentaires, tout.
+> 
+> Vous signez normalement sur le papier.
+> Automatiquement, c'est enregistré numériquement.
+> 
+> **Zéro changement pour vous. Tout le bénéfice du numérique.**
+> 
+> Le résultat? 
+> - Pas d'attente (on sait où est le dossier)
+> - Pas de perte (historique complet)
+> - Pas de stress (traçabilité légale)
+> - Pas de formation (c'est un QR code, tout le monde sait)
+> 
+> **Le meilleur des deux mondes.**"
 
 ---
 

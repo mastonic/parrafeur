@@ -28,11 +28,14 @@
 ```
 "Bonjour Monsieur le Président, Monsieur le Directeur.
 
-Depuis 50 ans, CAP SUD gère ses dossiers comme avant.
-Papier. Enveloppes. Recherche...
+Depuis 50 ans, CAP SUD gère ses dossiers en papier.
+C'est rassurant. C'est sûr.
 
-Aujourd'hui, je vous montre comment passer en numérique
-SANS effort, SANS risque, et avec ROI en 6 semaines.
+Aujourd'hui, je vous montre comment GARDER le papier
+mais ajouter une brique numérique intelligente.
+
+Zéro révolution. Juste une amélioration.
+Et ROI en 6 semaines.
 
 C'est parti."
 ```

@@ -1,6 +1,15 @@
-# 💰 Calcul du ROI - Parapheur Numérique CAP SUD
+# 💰 Calcul du ROI - Parapheur Hybride (Papier + QR Code) CAP SUD
 
 ## 📈 **Impact Financier pour CAP SUD**
+
+### ✨ **L'Approche: Hybride, pas Révolution**
+On ne demande pas d'abandonner le papier.  
+On ajoute juste une **couche numérique intelligente via QR code**:
+- ✅ Dossier papier + QR code imprimé
+- ✅ Scan le code pour voir l'historique numérique
+- ✅ Les gens continuent à signer sur papier
+- ✅ La signature est enregistrée automatiquement
+- **Résultat**: Zéro résistance au changement + tous les bénéfices numérique
 
 ---
 
