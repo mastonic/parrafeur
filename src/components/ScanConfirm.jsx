@@ -1,14 +1,11 @@
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { api } from '../api.js'
 import { useEffect, useState } from 'react'
 
 export default function ScanConfirm() {
-  const [params] = useSearchParams()
-  const navigate = useNavigate()
   const [parapheur, setParapheur] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const params = new URLSearchParams(window.location.search)
   const id = params.get('id')
   const nameHash = params.get('name')
 
@@ -35,7 +32,7 @@ export default function ScanConfirm() {
 
       setParapheur(data.objet)
       setTimeout(() => {
-        navigate(`/?id=${id}`)
+        window.location.href = `/?id=${id}`
       }, 2000)
     } catch (err) {
       setError(err.message || 'Erreur de validation')
