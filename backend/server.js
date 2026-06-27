@@ -9,9 +9,16 @@ import parapheursRoutes from './routes/parapheurs.js'
 import './db/database.js'
 
 const app = express()
-const PORT = process.env.PORT || 3001
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }))
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')
+app.use(cors({
+  origin: (origin, cb) => {
+    // Autorise les requêtes sans origine (same-origin, Vercel, etc.) et les origines listées
+    if (!origin || allowedOrigins.some(o => origin.startsWith(o.trim()))) return cb(null, true)
+    cb(new Error('CORS non autorisé'))
+  },
+  credentials: true
+}))
 app.use(express.json())
 
 app.use('/api/auth', authRoutes)
@@ -21,6 +28,11 @@ app.use('/api/parapheurs', parapheursRoutes)
 
 app.get('/api/health', (_, res) => res.json({ ok: true, ts: new Date().toISOString() }))
 
-app.listen(PORT, () => {
-  console.log(`Parapheur API démarrée sur http://localhost:${PORT}`)
-})
+// En mode serveur autonome (dev/prod self-hosted), on écoute sur le port
+// Sur Vercel, ce fichier est importé comme module et app est exporté comme handler
+if (process.env.STANDALONE === '1' || (!process.env.VERCEL && process.argv[1]?.endsWith('server.js'))) {
+  const PORT = process.env.PORT || 3001
+  app.listen(PORT, () => console.log(`Parapheur API démarrée sur http://localhost:${PORT}`))
+}
+
+export default app

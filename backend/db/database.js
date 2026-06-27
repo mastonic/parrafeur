@@ -4,10 +4,13 @@ import { dirname, join } from 'path'
 import bcrypt from 'bcryptjs'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
-const DB_PATH = join(__dir, '..', 'data', 'parapheur.db')
+// Sur Vercel, seul /tmp est inscriptible ; en self-hosted on utilise backend/data/
+const DB_PATH = process.env.VERCEL
+  ? '/tmp/parapheur.db'
+  : join(__dir, '..', 'data', 'parapheur.db')
 
 import { mkdirSync } from 'fs'
-mkdirSync(join(__dir, '..', 'data'), { recursive: true })
+if (!process.env.VERCEL) mkdirSync(join(__dir, '..', 'data'), { recursive: true })
 
 const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')

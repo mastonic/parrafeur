@@ -1,4 +1,5 @@
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+// En dev → backend local ; en production Vercel → même domaine /api
+const BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api')
 
 function getToken() {
   return localStorage.getItem('par_token')
