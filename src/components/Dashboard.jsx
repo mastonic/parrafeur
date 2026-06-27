@@ -127,9 +127,11 @@ export default function Dashboard({ parapheurs, onSelect, onNew }) {
         )}
       </div>
 
-      <button className="fab" onClick={onNew} title="Nouveau parapheur">
-        <span style={{ fontSize: 24, lineHeight: 1 }}>+</span>
-      </button>
+      {onNew && (
+        <button className="fab" onClick={onNew} title="Nouveau parapheur">
+          <span style={{ fontSize: 24, lineHeight: 1 }}>+</span>
+        </button>
+      )}
     </div>
   )
 }
