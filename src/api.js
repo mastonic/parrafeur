@@ -12,6 +12,7 @@ async function request(path, options = {}) {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    cache: 'no-store',
     ...options,
     body: options.body ? JSON.stringify(options.body) : undefined,
   })
@@ -22,7 +23,12 @@ async function request(path, options = {}) {
     return
   }
 
-  const data = await res.json()
+  let data
+  try {
+    data = await res.json()
+  } catch (e) {
+    throw new Error(`Réponse invalide du serveur: ${res.status} ${res.statusText}`)
+  }
   if (!res.ok) throw new Error(data.error || 'Erreur serveur')
   return data
 }
