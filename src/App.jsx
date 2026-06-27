@@ -59,7 +59,14 @@ export default function App() {
   }
 
   if (loading) {
-    return <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--cs-bg)', fontSize: 14, color: 'var(--cs-muted)' }}>Chargement...</div>
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--cs-bg)' }}>
+        <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--cs-bleu)', marginBottom: 16 }}>CAP SUD</div>
+        <div style={{ fontSize: 14, color: 'var(--cs-muted)' }}>Parapheur Numérique</div>
+        <div style={{ marginTop: 30, fontSize: 12, color: 'var(--cs-muted)', animation: 'pulse 1.5s ease-in-out infinite' }}>Chargement...</div>
+        <style>{`@keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }`}</style>
+      </div>
+    )
   }
 
   if (!user) return <LoginScreen />
