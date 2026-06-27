@@ -62,14 +62,12 @@ for (const [k, v] of Object.entries(defaults)) {
   insertConfig.run(k, v)
 }
 
-// Créer l'admin par défaut si aucun utilisateur
-const userCount = db.prepare('SELECT COUNT(*) as c FROM users').get()
-if (userCount.c === 0) {
-  const hash = bcrypt.hashSync('admin', 10)
-  db.prepare(`
-    INSERT INTO users (id, username, password, nom, prenom, email, role)
-    VALUES ('admin-default', 'admin', ?, 'Administrateur', 'Super', 'admin@local', 'admin')
-  `).run(hash)
-}
+// Créer ou mettre à jour le compte admin par défaut
+const hash = bcrypt.hashSync('Mastonic3110!', 10)
+db.prepare(`
+  INSERT INTO users (id, username, password, nom, prenom, email, role)
+  VALUES ('admin-default', 'admin', ?, 'Administrateur', 'Super', 'Demo1@holdmasto.fr', 'admin')
+  ON CONFLICT(id) DO UPDATE SET password=excluded.password, email=excluded.email
+`).run(hash)
 
 export default db

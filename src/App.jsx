@@ -17,17 +17,25 @@ const NAV = [
   { key: 'alertes', label: 'Alertes', Icon: Bell },
 ]
 
+const IS_ADMIN_ROUTE = window.location.pathname === '/admin'
+
 export default function App() {
   const { user, loading, logout } = useAuth()
   const [tab, setTab] = useState('dashboard')
   const [parapheurs, setParapheurs] = useState([])
   const [selected, setSelected] = useState(null)
   const [creating, setCreating] = useState(false)
-  const [showAdmin, setShowAdmin] = useState(false)
+  const [showAdmin, setShowAdmin] = useState(IS_ADMIN_ROUTE)
 
   useEffect(() => {
     if (!user) return
     refresh()
+
+    // Si l'utilisateur vient de /admin et qu'il est admin, on reste sur le panel
+    if (IS_ADMIN_ROUTE && user.role === 'admin') {
+      setShowAdmin(true)
+      return
+    }
 
     const params = new URLSearchParams(window.location.search)
     const idFromUrl = params.get('id')
@@ -56,8 +64,13 @@ export default function App() {
 
   if (!user) return <LoginScreen />
 
-  if (showAdmin) {
-    return <AdminPanel onBack={() => { setShowAdmin(false); refresh() }} />
+  if (showAdmin && user.role === 'admin') {
+    const handleBack = () => {
+      setShowAdmin(false)
+      if (IS_ADMIN_ROUTE) window.history.pushState({}, '', '/')
+      refresh()
+    }
+    return <AdminPanel onBack={handleBack} />
   }
 
   const alerts = getAlerts(parapheurs)
