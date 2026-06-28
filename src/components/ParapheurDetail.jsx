@@ -55,11 +55,15 @@ export default function ParapheurDetail({ par: initialPar, onBack, onUpdated }) 
 
   // Générer QR code via l'API (avec validation du nom)
   useEffect(() => {
+    if (!par?.id) return
+
     async function generateQR() {
       try {
         const data = await api.generateQR(par.id)
         if (data?.qr) {
           setQrImage(data.qr)
+        } else {
+          console.warn('Pas de QR dans la réponse')
         }
       } catch (err) {
         console.error('Erreur génération QR:', err)
