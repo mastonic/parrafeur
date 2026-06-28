@@ -50,22 +50,35 @@ export default function ParapheurDetail({ par: initialPar, onBack, onUpdated }) 
   const [activeStep, setActiveStep] = useState(null)
   const [showDelete, setShowDelete] = useState(false)
   const [qrImage, setQrImage] = useState(null)
+  const [qrError, setQrError] = useState(null)
   const canvasRef = useRef(null)
 
-  // Générer QR code via l'API (avec validation du nom)
+  // Générer QR code via l'API
   useEffect(() => {
-    if (!par?.id) return
+    if (!par?.id) {
+      setQrError('ID du dossier manquant')
+      return
+    }
 
     async function generateQR() {
       try {
+        setQrError(null)
+        console.log('📱 Génération QR pour:', par.id)
         const data = await api.generateQR(par.id)
+        console.log('📱 Réponse API:', data)
         if (data?.qr) {
+          console.log('✅ QR image défini')
           setQrImage(data.qr)
+        } else if (!data) {
+          console.error('⚠️  API a retourné null/undefined')
+          setQrError('Erreur authentification: merci de vous reconnecter')
         } else {
-          console.warn('Pas de QR dans la réponse')
+          console.error('⚠️  Pas de champ qr:', Object.keys(data))
+          setQrError('Réponse API invalide')
         }
       } catch (err) {
-        console.error('Erreur génération QR:', err)
+        console.error('❌ Erreur QR:', err)
+        setQrError(`Erreur: ${err.message}`)
       }
     }
     generateQR()
@@ -184,10 +197,14 @@ export default function ParapheurDetail({ par: initialPar, onBack, onUpdated }) 
           <div style={{ textAlign: 'center', marginBottom: 4 }}>
             <div style={{ fontSize: 11, color: 'var(--cs-muted)', marginBottom: 2 }}>CAP SUD — Parapheur numérique</div>
           </div>
-          {qrImage ? (
+          {qrError ? (
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--cs-rouge)', fontSize: 12 }}>
+              ❌ {qrError}
+            </div>
+          ) : qrImage ? (
             <img src={qrImage} alt="QR Code" style={{ maxWidth: '100%', height: 'auto' }} />
           ) : (
-            <div style={{ textAlign: 'center', padding: 20, color: 'var(--cs-muted)' }}>Génération QR...</div>
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--cs-muted)' }}>⏳ Génération QR...</div>
           )}
           <div className="qr-ref">{par.reference}</div>
           <div style={{ fontSize: 11, color: 'var(--cs-muted)', textAlign: 'center' }}>
