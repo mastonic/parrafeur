@@ -45,6 +45,7 @@ export const api = {
   updateStep: (id, stepOrdre, statut, commentaire) => request(`/parapheurs/${id}/step`, { method: 'PUT', body: { stepOrdre, statut, commentaire } }),
   archiveParapheur: (id) => request(`/parapheurs/${id}/archive`, { method: 'PUT' }),
   deleteParapheur: (id) => request(`/parapheurs/${id}`, { method: 'DELETE' }),
+  generateQR: (id) => request(`/parapheurs/${id}/qr`),
 
   // Utilisateurs (admin)
   getUsers: () => request('/users'),

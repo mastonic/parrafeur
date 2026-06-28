@@ -57,9 +57,8 @@ export default function ParapheurDetail({ par: initialPar, onBack, onUpdated }) 
   useEffect(() => {
     async function generateQR() {
       try {
-        const response = await fetch(`/api/parapheurs/${par.id}/qr`)
-        const data = await response.json()
-        if (data.qr) {
+        const data = await api.generateQR(par.id)
+        if (data?.qr) {
           setQrImage(data.qr)
         }
       } catch (err) {
