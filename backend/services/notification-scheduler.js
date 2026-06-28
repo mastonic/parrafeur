@@ -2,9 +2,11 @@ import { v4 as uuid } from 'uuid'
 import db from '../db/database.js'
 
 // Points de trigger pour les rappels (en jours)
+// Les triggers "avant" sont positifs (jours avant deadline)
+// Les triggers "après" sont négatifs (jours en retard)
 const REMINDER_TRIGGERS = [
-  { name: 'before', days: [-7, -5, -2, 0] },      // avant deadline
-  { name: 'overdue', days: [3, 6, 10] }           // après deadline
+  { name: 'before', days: [7, 5, 2, 0] },        // avant deadline
+  { name: 'overdue', days: [-3, -6, -10] }       // après deadline (en retard)
 ]
 
 export function getPendingNotifications() {
@@ -43,7 +45,7 @@ export function getPendingNotifications() {
     // Vérifier les triggers après deadline (retard)
     if (diffDays < 0) {
       REMINDER_TRIGGERS[1].days.forEach(triggerDay => {
-        if (Math.abs(diffDays) === triggerDay) {
+        if (diffDays === triggerDay) {  // triggerDay est négatif (ex: -3)
           const exists = db.prepare(
             'SELECT id FROM notification_log WHERE parapheur_id = ? AND trigger_type = ? AND days_offset = ?'
           ).get(par.id, 'overdue', triggerDay)
@@ -53,7 +55,7 @@ export function getPendingNotifications() {
               type: 'overdue_reminder',
               trigger: triggerDay,
               parapheur: par,
-              message: buildOverdueMessage(par, triggerDay),
+              message: buildOverdueMessage(par, Math.abs(triggerDay)),  // Passer la valeur abs pour le message
             })
           }
         }
@@ -96,8 +98,8 @@ function buildDeadlineMessage(par, daysOffset) {
   if (daysOffset === 0) {
     return `⚠️ ${par.reference}: Deadline AUJOURD'HUI! "${par.objet}"`
   }
-  const daysText = Math.abs(daysOffset)
-  return `🔔 ${par.reference}: Échéance dans ${daysText} jour(s) - "${par.objet}"`
+  // daysOffset est positif pour les triggers before
+  return `🔔 ${par.reference}: Échéance dans ${daysOffset} jour(s) - "${par.objet}"`
 }
 
 function buildOverdueMessage(par, daysOffset) {
