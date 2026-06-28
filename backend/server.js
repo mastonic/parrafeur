@@ -4,6 +4,7 @@ import authRoutes from './routes/auth.js'
 import usersRoutes from './routes/users.js'
 import configRoutes from './routes/config.js'
 import parapheursRoutes from './routes/parapheurs.js'
+import notificationsRoutes from './routes/notifications.js'
 
 // Initialise la base de données au démarrage
 import './db/database.js'
@@ -25,6 +26,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/config', configRoutes)
 app.use('/api/parapheurs', parapheursRoutes)
+app.use('/api/notifications', notificationsRoutes)
 
 app.get('/api/health', (_, res) => res.json({ ok: true, ts: new Date().toISOString() }))
 

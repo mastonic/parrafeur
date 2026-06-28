@@ -49,6 +49,16 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS notification_log (
+    id            TEXT PRIMARY KEY,
+    parapheur_id  TEXT NOT NULL,
+    trigger_type  TEXT NOT NULL,
+    days_offset   INTEGER NOT NULL,
+    sent_at       TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(parapheur_id, trigger_type, days_offset)
+  );
 `)
 
 const defaults = {

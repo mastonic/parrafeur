@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { Users, Settings, ArrowLeft } from 'lucide-react'
+import { Users, Settings, Bell, ArrowLeft } from 'lucide-react'
 import UsersManager from './UsersManager.jsx'
 import ConfigManager from './ConfigManager.jsx'
+import NotificationsAdmin from './NotificationsAdmin.jsx'
 
 const TABS = [
   { key: 'users', label: 'Utilisateurs', Icon: Users },
+  { key: 'notifications', label: 'Notifications', Icon: Bell },
   { key: 'config', label: 'Configuration', Icon: Settings },
 ]
 
@@ -35,6 +37,7 @@ export default function AdminPanel({ onBack }) {
 
       <div style={{ flex: 1, padding: 16, overflowY: 'auto' }}>
         {tab === 'users' && <UsersManager />}
+        {tab === 'notifications' && <NotificationsAdmin />}
         {tab === 'config' && <ConfigManager />}
       </div>
     </div>

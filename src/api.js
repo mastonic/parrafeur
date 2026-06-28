@@ -56,4 +56,9 @@ export const api = {
   getConfig: () => request('/config'),
   updateConfig: (data) => request('/config', { method: 'PUT', body: data }),
   testLdap: (data) => request('/config/test-ldap', { method: 'POST', body: data }),
+
+  // Notifications
+  getPendingNotifications: () => request('/notifications/pending'),
+  testNotifications: () => request('/notifications/test', { method: 'POST', body: {} }),
+  subscribeNotifications: (subscription) => request('/notifications/subscribe', { method: 'POST', body: { subscription } }),
 }
