@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import QRCode from 'qrcode'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Check, X, Printer, ArrowLeft, Archive, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
