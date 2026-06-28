@@ -1,5 +1,6 @@
 import { Router } from 'express'
-import { getPendingNotifications, logNotification } from '../services/notification-scheduler.js'
+import { getPendingNotifications, logNotification, getNotificationChannels } from '../services/notification-scheduler.js'
+import { sendNotificationEmail } from '../services/email-service.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
@@ -31,21 +32,50 @@ router.post('/subscribe', (req, res) => {
 })
 
 // POST pour tester les notifications (admin only)
-router.post('/test', (req, res) => {
+router.post('/test', async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin only' })
   }
 
   const notifications = getPendingNotifications()
+  const recipients = getNotificationChannels()
+  const emailResults = []
 
   notifications.forEach(n => {
-    logNotification(n.parapheur.id, n.type, n.trigger)
+    let triggerType
+    if (n.type === 'deadline_reminder') triggerType = 'before'
+    else if (n.type === 'overdue_reminder') triggerType = 'overdue'
+    else if (n.type === 'step_blocked') triggerType = 'blocked'
+
+    logNotification(n.parapheur.id, triggerType, n.trigger)
   })
+
+  // Envoyer les emails de notification
+  for (const notif of notifications) {
+    for (const recipient of recipients) {
+      try {
+        const result = await sendNotificationEmail(notif, recipient)
+        emailResults.push({
+          notification: notif.message,
+          recipient: recipient.target,
+          sent: result.ok
+        })
+      } catch (err) {
+        emailResults.push({
+          notification: notif.message,
+          recipient: recipient.target,
+          sent: false,
+          error: err.message
+        })
+      }
+    }
+  }
 
   res.json({
     ok: true,
     tested: notifications.length,
     notifications: notifications.map(n => n.message),
+    emails: emailResults,
   })
 })
 
