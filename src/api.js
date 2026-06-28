@@ -7,6 +7,9 @@ function getToken() {
 
 async function request(path, options = {}) {
   const token = getToken()
+  if (!token && path !== '/auth/login') {
+    console.warn('⚠️  Pas de token pour requête:', path)
+  }
   const res = await fetch(`${BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -17,19 +20,19 @@ async function request(path, options = {}) {
     body: options.body ? JSON.stringify(options.body) : undefined,
   })
 
-  if (res.status === 401) {
-    localStorage.removeItem('par_token')
-    window.location.reload()
-    return
-  }
-
   let data
   try {
     data = await res.json()
   } catch (e) {
     throw new Error(`Réponse invalide du serveur: ${res.status} ${res.statusText}`)
   }
-  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+
+  if (res.status === 401) {
+    localStorage.removeItem('par_token')
+    throw new Error('Token expiré ou invalide - veuillez vous reconnecter')
+  }
+
+  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}: ${res.statusText}`)
   return data
 }
 
