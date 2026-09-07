@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Plus, Trash2, ChevronDown } from 'lucide-react'
-import { createParapheur, CIRCUITS_PREDEFINED, SERVICES } from '../store.js'
+import { CIRCUITS_PREDEFINED, SERVICES } from '../store.js'
+import { api } from '../api.js'
 
 export default function NewParapheur({ onCreated, onCancel }) {
   const [step, setStep] = useState(1) // 1: infos, 2: circuit, 3: recap
@@ -37,8 +38,12 @@ export default function NewParapheur({ onCreated, onCancel }) {
   }
 
   async function handleCreate() {
-    const par = await createParapheur({ objet, service, priorite, deadline: deadline || null, circuit, notes })
-    onCreated(par)
+    try {
+      const par = await api.createParapheur({ objet, service, priorite, deadline: deadline || null, circuit, notes })
+      onCreated(par)
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   const canNext1 = objet.trim() && service.trim()
