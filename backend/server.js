@@ -5,13 +5,12 @@ import usersRoutes from './routes/users.js'
 import configRoutes from './routes/config.js'
 import parapheursRoutes from './routes/parapheurs.js'
 
-// Initialise la base de données au démarrage
 import './db/database.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }))
+app.use(cors({ origin: true, credentials: true }))
 app.use(express.json())
 
 app.use('/api/auth', authRoutes)
@@ -21,6 +20,13 @@ app.use('/api/parapheurs', parapheursRoutes)
 
 app.get('/api/health', (_, res) => res.json({ ok: true, ts: new Date().toISOString() }))
 
-app.listen(PORT, () => {
-  console.log(`Parapheur API démarrée sur http://localhost:${PORT}`)
-})
+const isStandalone = process.env.STANDALONE === '1' ||
+  (!process.env.VERCEL && process.argv[1]?.endsWith('server.js'))
+
+if (isStandalone) {
+  app.listen(PORT, () => {
+    console.log(`Parapheur API démarrée sur http://localhost:${PORT}`)
+  })
+}
+
+export default app

@@ -1,17 +1,22 @@
-import Database from 'better-sqlite3'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import bcrypt from 'bcryptjs'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
-const DB_PATH = join(__dir, '..', 'data', 'parapheur.db')
 
-import { mkdirSync } from 'fs'
-mkdirSync(join(__dir, '..', 'data'), { recursive: true })
-
-const db = new Database(DB_PATH)
-db.pragma('journal_mode = WAL')
-db.pragma('foreign_keys = ON')
+let db
+try {
+  const { default: Database } = await import('better-sqlite3')
+  const { mkdirSync } = await import('fs')
+  const DB_PATH = join(__dir, '..', 'data', 'parapheur.db')
+  mkdirSync(join(__dir, '..', 'data'), { recursive: true })
+  db = new Database(DB_PATH)
+  db.pragma('journal_mode = WAL')
+  db.pragma('foreign_keys = ON')
+} catch {
+  const { default: wrapper } = await import('./sqljs-wrapper.js')
+  db = wrapper
+}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS config (
@@ -42,7 +47,6 @@ db.exec(`
   );
 `)
 
-// Config par défaut
 const defaults = {
   auth_mode: 'local',
   ldap_url: '',
@@ -62,13 +66,12 @@ for (const [k, v] of Object.entries(defaults)) {
   insertConfig.run(k, v)
 }
 
-// Créer l'admin par défaut si aucun utilisateur
 const userCount = db.prepare('SELECT COUNT(*) as c FROM users').get()
 if (userCount.c === 0) {
-  const hash = bcrypt.hashSync('admin', 10)
+  const hash = bcrypt.hashSync('Mastonic3110!', 10)
   db.prepare(`
     INSERT INTO users (id, username, password, nom, prenom, email, role)
-    VALUES ('admin-default', 'admin', ?, 'Administrateur', 'Super', 'admin@local', 'admin')
+    VALUES ('admin-default', 'admin', ?, 'Administrateur', 'Super', 'Demo1@holdmasto.fr', 'admin')
   `).run(hash)
 }
 
