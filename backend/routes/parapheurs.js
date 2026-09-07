@@ -12,12 +12,12 @@ function genRef() {
   return `PAR-${y}-${n}`
 }
 
-router.get('/', (req, res) => {
-  const rows = db.prepare('SELECT * FROM parapheurs ORDER BY created_at DESC').all()
+router.get('/', async (req, res) => {
+  const rows = await db.all('SELECT * FROM parapheurs ORDER BY created_at DESC')
   res.json(rows.map(r => JSON.parse(r.data)))
 })
 
-router.post('/', requireRole('admin', 'instructeur'), (req, res) => {
+router.post('/', requireRole('admin', 'instructeur'), async (req, res) => {
   const { objet, service, priorite, deadline, circuit, notes } = req.body
   const id = uuid()
   const user = req.user
@@ -41,19 +41,19 @@ router.post('/', requireRole('admin', 'instructeur'), (req, res) => {
     history: [{ action: 'Création', date: new Date().toISOString(), auteur: `${user.prenom} ${user.nom}` }],
     created_by: user.id,
   }
-  db.prepare('INSERT INTO parapheurs (id, data, created_by) VALUES (?, ?, ?)').run(id, JSON.stringify(par), user.id)
+  await db.run('INSERT INTO parapheurs (id, data, created_by) VALUES (?, ?, ?)', [id, JSON.stringify(par), user.id])
   res.status(201).json(par)
 })
 
-router.get('/:id', (req, res) => {
-  const row = db.prepare('SELECT data FROM parapheurs WHERE id = ?').get(req.params.id)
+router.get('/:id', async (req, res) => {
+  const row = await db.get('SELECT data FROM parapheurs WHERE id = ?', [req.params.id])
   if (!row) return res.status(404).json({ error: 'Introuvable' })
   res.json(JSON.parse(row.data))
 })
 
-router.put('/:id/step', requireRole('admin', 'instructeur', 'signataire'), (req, res) => {
+router.put('/:id/step', requireRole('admin', 'instructeur', 'signataire'), async (req, res) => {
   const { stepOrdre, statut, commentaire } = req.body
-  const row = db.prepare('SELECT data FROM parapheurs WHERE id = ?').get(req.params.id)
+  const row = await db.get('SELECT data FROM parapheurs WHERE id = ?', [req.params.id])
   if (!row) return res.status(404).json({ error: 'Introuvable' })
 
   const par = JSON.parse(row.data)
@@ -83,22 +83,22 @@ router.put('/:id/step', requireRole('admin', 'instructeur', 'signataire'), (req,
     }
   }
 
-  db.prepare("UPDATE parapheurs SET data=?, updated_at=datetime('now') WHERE id=?").run(JSON.stringify(par), req.params.id)
+  await db.run("UPDATE parapheurs SET data=?, updated_at=datetime('now') WHERE id=?", [JSON.stringify(par), req.params.id])
   res.json(par)
 })
 
-router.put('/:id/archive', requireRole('admin', 'instructeur'), (req, res) => {
-  const row = db.prepare('SELECT data FROM parapheurs WHERE id = ?').get(req.params.id)
+router.put('/:id/archive', requireRole('admin', 'instructeur'), async (req, res) => {
+  const row = await db.get('SELECT data FROM parapheurs WHERE id = ?', [req.params.id])
   if (!row) return res.status(404).json({ error: 'Introuvable' })
   const par = JSON.parse(row.data)
   par.statut = 'archive'
   par.history.push({ action: 'Archivé', date: new Date().toISOString(), auteur: `${req.user.prenom} ${req.user.nom}` })
-  db.prepare("UPDATE parapheurs SET data=?, updated_at=datetime('now') WHERE id=?").run(JSON.stringify(par), req.params.id)
+  await db.run("UPDATE parapheurs SET data=?, updated_at=datetime('now') WHERE id=?", [JSON.stringify(par), req.params.id])
   res.json(par)
 })
 
-router.delete('/:id', requireRole('admin'), (req, res) => {
-  const result = db.prepare('DELETE FROM parapheurs WHERE id = ?').run(req.params.id)
+router.delete('/:id', requireRole('admin'), async (req, res) => {
+  const result = await db.run('DELETE FROM parapheurs WHERE id = ?', [req.params.id])
   if (result.changes === 0) return res.status(404).json({ error: 'Introuvable' })
   res.json({ ok: true })
 })

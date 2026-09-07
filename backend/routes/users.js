@@ -14,43 +14,37 @@ function safeUser(u) {
   return rest
 }
 
-// Liste tous les utilisateurs (admin seulement)
-router.get('/', requireRole('admin'), (req, res) => {
-  const users = db.prepare('SELECT * FROM users ORDER BY nom, prenom').all()
+router.get('/', requireRole('admin'), async (req, res) => {
+  const users = await db.all('SELECT * FROM users ORDER BY nom, prenom')
   res.json(users.map(safeUser))
 })
 
-// Créer un utilisateur
 router.post('/', requireRole('admin'), async (req, res) => {
   const { username, password, nom, prenom, email, service, role } = req.body
   if (!username || !nom || !prenom || !role) return res.status(400).json({ error: 'Champs obligatoires manquants' })
   if (!ROLES.includes(role)) return res.status(400).json({ error: 'Rôle invalide' })
 
-  const exists = db.prepare('SELECT id FROM users WHERE username = ?').get(username)
-  if (exists) return res.status(409).json({ error: 'Nom d\'utilisateur déjà utilisé' })
+  const exists = await db.get('SELECT id FROM users WHERE username = ?', [username])
+  if (exists) return res.status(409).json({ error: "Nom d'utilisateur déjà utilisé" })
 
   const id = uuid()
-  let hash = null
-  if (password) hash = await bcrypt.hash(password, 10)
+  const hash = password ? await bcrypt.hash(password, 10) : null
 
-  db.prepare(`
-    INSERT INTO users (id, username, password, nom, prenom, email, service, role)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, username, hash, nom, prenom, email || null, service || null, role)
+  await db.run(
+    `INSERT INTO users (id, username, password, nom, prenom, email, service, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, username, hash, nom, prenom, email || null, service || null, role]
+  )
 
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id)
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [id])
   res.status(201).json(safeUser(user))
 })
 
-// Modifier un utilisateur
 router.put('/:id', requireRole('admin'), async (req, res) => {
   const { nom, prenom, email, service, role, actif, password } = req.body
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id)
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [req.params.id])
   if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' })
 
   if (role && !ROLES.includes(role)) return res.status(400).json({ error: 'Rôle invalide' })
-
-  // Empêcher de se retirer ses propres droits admin
   if (req.params.id === req.user.id && role && role !== 'admin') {
     return res.status(400).json({ error: 'Vous ne pouvez pas retirer vos propres droits administrateur' })
   }
@@ -65,22 +59,25 @@ router.put('/:id', requireRole('admin'), async (req, res) => {
   }
 
   if (password) {
-    updates.password = await bcrypt.hash(password, 10)
-    db.prepare(`UPDATE users SET nom=?, prenom=?, email=?, service=?, role=?, actif=?, password=? WHERE id=?`)
-      .run(updates.nom, updates.prenom, updates.email, updates.service, updates.role, updates.actif, updates.password, req.params.id)
+    const hash = await bcrypt.hash(password, 10)
+    await db.run(
+      `UPDATE users SET nom=?, prenom=?, email=?, service=?, role=?, actif=?, password=? WHERE id=?`,
+      [updates.nom, updates.prenom, updates.email, updates.service, updates.role, updates.actif, hash, req.params.id]
+    )
   } else {
-    db.prepare(`UPDATE users SET nom=?, prenom=?, email=?, service=?, role=?, actif=? WHERE id=?`)
-      .run(updates.nom, updates.prenom, updates.email, updates.service, updates.role, updates.actif, req.params.id)
+    await db.run(
+      `UPDATE users SET nom=?, prenom=?, email=?, service=?, role=?, actif=? WHERE id=?`,
+      [updates.nom, updates.prenom, updates.email, updates.service, updates.role, updates.actif, req.params.id]
+    )
   }
 
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id)
+  const updated = await db.get('SELECT * FROM users WHERE id = ?', [req.params.id])
   res.json(safeUser(updated))
 })
 
-// Supprimer un utilisateur
-router.delete('/:id', requireRole('admin'), (req, res) => {
+router.delete('/:id', requireRole('admin'), async (req, res) => {
   if (req.params.id === req.user.id) return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' })
-  const result = db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id)
+  const result = await db.run('DELETE FROM users WHERE id = ?', [req.params.id])
   if (result.changes === 0) return res.status(404).json({ error: 'Utilisateur introuvable' })
   res.json({ ok: true })
 })

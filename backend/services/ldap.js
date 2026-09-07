@@ -1,13 +1,13 @@
 import ldap from 'ldapjs'
 import db from '../db/database.js'
 
-function getConfig() {
-  const rows = db.prepare('SELECT key, value FROM config').all()
+async function getConfig() {
+  const rows = await db.all('SELECT key, value FROM config')
   return Object.fromEntries(rows.map(r => [r.key, r.value]))
 }
 
 export async function ldapAuthenticate(username, password) {
-  const cfg = getConfig()
+  const cfg = await getConfig()
 
   if (!cfg.ldap_url || !cfg.ldap_base_dn) {
     throw new Error('Configuration LDAP incomplète')

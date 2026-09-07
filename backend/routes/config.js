@@ -8,32 +8,30 @@ router.use(requireAuth, requireRole('admin'))
 
 const PUBLIC_KEYS = ['auth_mode', 'app_name', 'ldap_url', 'ldap_base_dn', 'ldap_bind_dn', 'ldap_user_filter', 'ldap_attr_nom', 'ldap_attr_prenom', 'ldap_attr_email', 'ldap_attr_service']
 const SECRET_KEYS = ['ldap_bind_password']
+const ALLOWED = [...PUBLIC_KEYS, ...SECRET_KEYS]
 
-router.get('/', (req, res) => {
-  const rows = db.prepare('SELECT key, value FROM config').all()
-  const cfg = Object.fromEntries(rows.map(r => [r.key, SECRET_KEYS.includes(r.key) ? (r.value ? '••••••••' : '') : r.value]))
+router.get('/', async (req, res) => {
+  const rows = await db.all('SELECT key, value FROM config')
+  const cfg = Object.fromEntries(
+    rows.map(r => [r.key, SECRET_KEYS.includes(r.key) ? (r.value ? '••••••••' : '') : r.value])
+  )
   res.json(cfg)
 })
 
-router.put('/', (req, res) => {
-  const allowed = [...PUBLIC_KEYS, ...SECRET_KEYS]
-  const update = db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)')
-  const tx = db.transaction((data) => {
-    for (const [k, v] of Object.entries(data)) {
-      if (!allowed.includes(k)) continue
-      // Ne pas écraser le mot de passe si envoyé masqué
-      if (k === 'ldap_bind_password' && v === '••••••••') continue
-      update.run(k, v)
-    }
-  })
-  tx(req.body)
+router.put('/', async (req, res) => {
+  const statements = []
+  for (const [k, v] of Object.entries(req.body)) {
+    if (!ALLOWED.includes(k)) continue
+    if (k === 'ldap_bind_password' && v === '••••••••') continue
+    statements.push({ sql: 'INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', args: [k, v] })
+  }
+  if (statements.length) await db.transaction(statements)
   res.json({ ok: true })
 })
 
 router.post('/test-ldap', async (req, res) => {
   try {
-    const cfg = req.body
-    await testLdapConnection(cfg)
+    await testLdapConnection(req.body)
     res.json({ ok: true, message: 'Connexion LDAP réussie' })
   } catch (err) {
     res.status(400).json({ ok: false, message: err.message })

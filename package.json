@@ -21,7 +21,8 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "sql.js": "^1.10.3",
-    "ldapjs": "^3.0.7"
+    "ldapjs": "^3.0.7",
+    "@libsql/client": "^0.14.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
